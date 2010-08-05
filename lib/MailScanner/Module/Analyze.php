@@ -1,5 +1,30 @@
 <?php
+/**
+ * MailScanner
+ *
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to tsmckelvey@gmail.com so I can send you a copy immediately.
+ *
+ * @category  MailScanner
+ * @package   MailScanner_Module
+ * @copyright Copyright (c) 2010 brainbits GmbH (http://www.brainbits.net)
+ */
 
+/**
+ * Analyze module class
+ * Analyzes mails by rule sets, creates a success/fail report
+ *
+ * @category  MailScanner
+ * @package   MailScanner_Module
+ * @author    Stephan Wentz <swentz@brainbits.net>
+ * @copyright Copyright (c) 2010 brainbits GmbH (http://www.brainbits.net)
+ * @see       MailScanner_Module_Interface
+ */
 class MailScanner_Module_Analyze extends MailScanner_Module_Abstract
 {
     /**
@@ -48,7 +73,7 @@ class MailScanner_Module_Analyze extends MailScanner_Module_Abstract
         $this->_deleteMessages();
     }
 
-    protected function _doPrepare()
+    protected function _doMap()
     {
         $results = $this->_rawResult;
         $this->_rawResult = array();
@@ -78,7 +103,7 @@ class MailScanner_Module_Analyze extends MailScanner_Module_Abstract
 
     protected function _doAnalyze()
     {
-        $this->_log->log(PHP_EOL . 'Analyzing results...' . PHP_EOL);
+        $this->_log->info(PHP_EOL . 'Analyzing results...' . PHP_EOL);
 
         foreach ($this->_options['check'] as $name => $expectedRow)
         {
@@ -114,22 +139,22 @@ class MailScanner_Module_Analyze extends MailScanner_Module_Abstract
         if (!empty($this->_rawResult))
         {
             array_push($this->_result, 'Found candidates that are not configured:');
-            $this->_log->log(PHP_EOL . 'Found candidates that are not configured:' . PHP_EOL);
+            $this->_log->notice(PHP_EOL . 'Found candidates that are not configured:' . PHP_EOL);
             foreach ($this->_rawResult as $name => $rawResult)
             {
                 array_push($this->_result, $name . ': ran ' . $rawResult['occurances'] . 'x');
-                $this->_log->log($name . ': ran ' . $rawResult['occurances'] . 'x' . PHP_EOL);
+                $this->_log->notice($name . ': ran ' . $rawResult['occurances'] . 'x' . PHP_EOL);
             }
         }
 
         if ($this->_ok)
         {
-            $this->_log->log(PHP_EOL . $this->_options['title'] .' results: All OK' . PHP_EOL);
+            $this->_log->notice(PHP_EOL . $this->_options['title'] .' results: All OK' . PHP_EOL);
             array_unshift($this->_result, $this->_options['title'] .' results: All OK');
         }
         else
         {
-            $this->_log->log(PHP_EOL . $this->_options['title'] .' results: Errors' . PHP_EOL);
+            $this->_log->notice(PHP_EOL . $this->_options['title'] .' results: Errors' . PHP_EOL);
             array_unshift($this->_result, $this->_options['title'] .' results: Errors');
         }
     }

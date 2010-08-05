@@ -76,7 +76,7 @@ class MailScanner_Module_ReobackBackup extends MailScanner_Module_Abstract
 
     protected function _doAnalyze()
     {
-        $this->_log->log(PHP_EOL . 'Analyzing results...' . PHP_EOL);
+        $this->_log->info(PHP_EOL . 'Analyzing results...' . PHP_EOL);
 
         foreach ($this->_options['check'] as $name => $expectedRow)
         {
@@ -116,22 +116,22 @@ class MailScanner_Module_ReobackBackup extends MailScanner_Module_Abstract
         if (!empty($this->_rawResult))
         {
             array_push($this->_result, 'Found candidates that are not configured:');
-            $this->_log->log(PHP_EOL . 'Found candidates that are not configured:' . PHP_EOL);
+            $this->_log->notice(PHP_EOL . 'Found candidates that are not configured:' . PHP_EOL);
             foreach ($this->_rawResult as $name => $rawResult)
             {
                 array_push($this->_result, $name . ': ran ' . $rawResult['occurances'] . 'x');
-                $this->_log->log($name . ': ran ' . $rawResult['occurances'] . 'x' . PHP_EOL);
+                $this->_log->notice($name . ': ran ' . $rawResult['occurances'] . 'x' . PHP_EOL);
             }
         }
 
         if ($this->_ok)
         {
-            $this->_log->log(PHP_EOL . 'Reoback Backup Results: All OK' . PHP_EOL);
+            $this->_log->notice(PHP_EOL . 'Reoback Backup Results: All OK' . PHP_EOL);
             array_unshift($this->_result, 'Reoback Backup Results: All OK');
         }
         else
         {
-            $this->_log->log(PHP_EOL . 'Reoback Backup Results: Errors' . PHP_EOL);
+            $this->_log->notice(PHP_EOL . 'Reoback Backup Results: Errors' . PHP_EOL);
             array_unshift($this->_result, 'Reoback Backup Results: Errors');
         }
     }

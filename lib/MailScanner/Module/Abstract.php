@@ -1,5 +1,30 @@
 <?php
+/**
+ * MailScanner
+ *
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to tsmckelvey@gmail.com so I can send you a copy immediately.
+ *
+ * @category  MailScanner
+ * @package   MailScanner_Module
+ * @copyright Copyright (c) 2010 brainbits GmbH (http://www.brainbits.net)
+ */
 
+/**
+ * Abstract module class
+ * Provides basic functions needed to read and delete mails
+ *
+ * @category  MailScanner
+ * @package   MailScanner_Module
+ * @author    Stephan Wentz <swentz@brainbits.net>
+ * @copyright Copyright (c) 2010 brainbits GmbH (http://www.brainbits.net)
+ * @see       MailScanner_Module_Interface
+ */
 abstract class MailScanner_Module_Abstract implements MailScanner_Module_Interface
 {
     const DOT_MISS   = '#';
@@ -120,27 +145,27 @@ abstract class MailScanner_Module_Abstract implements MailScanner_Module_Interfa
      */
     protected function _init()
     {
-        $this->_log->log(PHP_EOL . PHP_EOL . $this->_options['title'] . ':' . PHP_EOL);
-        $this->_log->log(PHP_EOL . 'Folder: ' . $this->_options['folder'] . PHP_EOL);
+        $this->_log->notice(PHP_EOL . PHP_EOL . $this->_options['title'] . ':' . PHP_EOL);
+        $this->_log->notice(PHP_EOL . 'Folder: ' . $this->_options['folder'] . PHP_EOL);
 
         $this->_mail->selectFolder($this->_options['folder']);
 
         if ($this->_options['action_delete'])
         {
-            $this->_log->log('Delete enabled' . PHP_EOL);
+            $this->_log->info('Delete enabled' . PHP_EOL);
         }
 
         if ($this->_options['action_mark_seen'])
         {
-            $this->_log->log('Mark seen enabled' . PHP_EOL);
+            $this->_log->info('Mark seen enabled' . PHP_EOL);
         }
 
-        $this->_log->log('Examining ' . $this->_mail->countMessages() . ' mails' . PHP_EOL);
-        $this->_log->log('Legend:   ' . self::DOT_MISS . ' miss   ' .
-                                        self::DOT_SKIP . ' skip   ' .
-                                        self::DOT_DELETE . ' delete   ' .
-                                        self::DOT_HIT . ' hit' .
-                                        PHP_EOL);
+        $this->_log->info('Examining ' . $this->_mail->countMessages() . ' mails' . PHP_EOL);
+        $this->_log->info('Legend:   ' . self::DOT_MISS . ' miss   ' .
+                                         self::DOT_SKIP . ' skip   ' .
+                                         self::DOT_DELETE . ' delete   ' .
+                                         self::DOT_HIT . ' hit' .
+                                         PHP_EOL);
     }
 
     /**
@@ -157,12 +182,14 @@ abstract class MailScanner_Module_Abstract implements MailScanner_Module_Interfa
         $startDate  = date('YmdHis', $timeConsider);
         $deleteDate = date('YmdHis', $timeKeep);
 
-        $this->_log->log('Considering mails after ' . date('Y-m-d H:i:s', $timeConsider) . PHP_EOL);
-        $this->_log->log('Deleting mails before ' . date('Y-m-d H:i:s', $timeKeep) . PHP_EOL);
+        $this->_log->info('Considering mails after ' . date('Y-m-d H:i:s', $timeConsider) . PHP_EOL);
+        $this->_log->info('Deleting mails before ' . date('Y-m-d H:i:s', $timeKeep) . PHP_EOL);
 
         $candidates = array();
 
-        $this->_log->log(PHP_EOL . 'Reading:' . PHP_EOL);
+        $this->_log->info(PHP_EOL . 'Reading:' . PHP_EOL);
+
+        $this->_log->startDots();
 
         foreach ($this->_mail as $msgID => $msg)
         {
@@ -269,7 +296,7 @@ abstract class MailScanner_Module_Abstract implements MailScanner_Module_Interfa
                 // if no pattern has matched, skip
                 if (!$hit)
                 {
-                    $this->_log->log(self::DOT_MISS);
+                    $this->_log->dot(self::DOT_MISS);
                     continue;
                 }
 
@@ -277,7 +304,7 @@ abstract class MailScanner_Module_Abstract implements MailScanner_Module_Interfa
                 if ($date < $deleteDate)
                 {
                     array_unshift($this->_deleteMsgs, $msgID);
-                    $this->_log->log(self::DOT_DELETE);
+                    $this->_log->dot(self::DOT_DELETE);
                     continue;
                 }
 
@@ -295,14 +322,14 @@ abstract class MailScanner_Module_Abstract implements MailScanner_Module_Interfa
                 // skip messages that are older than startDate
                 if ($date < $startDate)
                 {
-                    $this->_log->log(self::DOT_SKIP);
+                    $this->_log->dot(self::DOT_SKIP);
                     continue;
                 }
 
                 // get fresh copy of message
                 //$msg = $this->_mail->getMessage($msgID);
 
-                $this->_log->log(self::DOT_HIT);
+                $this->_log->dot(self::DOT_HIT);
                 $this->_rawResult[] = $result;
 
                 $candidates[] = $dummyDate;
@@ -312,15 +339,13 @@ abstract class MailScanner_Module_Abstract implements MailScanner_Module_Interfa
             }
         }
 
-        /*
-        $this->_log->log(PHP_EOL . 'Candidates:' . PHP_EOL);
+        $this->_log->endDots(PHP_EOL);
+
+        $this->_log->debug(PHP_EOL . 'Candidates:' . PHP_EOL);
         foreach ($candidates as $candidate)
         {
-            $this->_log->log($candidate . PHP_EOL);
+            $this->_log->debug($candidate . PHP_EOL);
         }
-        */
-
-        $this->_log->log(PHP_EOL);
     }
 
     /**
@@ -335,15 +360,16 @@ abstract class MailScanner_Module_Abstract implements MailScanner_Module_Interfa
 
         if (sizeof($this->_deleteMsgs))
         {
-            $this->_log->log(PHP_EOL . 'Deleting ' . count($this->_deleteMsgs) . ' old mails:' . PHP_EOL);
+            $this->_log->notice(PHP_EOL . 'Deleting ' . count($this->_deleteMsgs) . ' old mails:' . PHP_EOL);
+            $this->_log->startDots();
 
             foreach ($this->_deleteMsgs as $msgId)
             {
-                $this->_log->log(self::DOT_DELETE);
+                $this->_log->dot(self::DOT_DELETE);
                 $this->_mail->removeMessage($msgId);
             }
 
-            $this->_log->log(PHP_EOL);
+            $this->_log->endDots();
         }
     }
 }

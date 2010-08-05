@@ -44,8 +44,7 @@ class MailScanner_Check
      */
     public function run()
     {
-        $this->_log->log('Starting tests');
-
+        $this->_log->info('Testing started: '.date('Y-m-d H:i:s') . PHP_EOL);
         $body = 'Testing started: '.date('Y-m-d H:i:s')."\n\n";
 
         $errors = array();
@@ -64,7 +63,5 @@ class MailScanner_Check
         }
 
         $this->_report->report($body);
-
-        $this->_log->log('Sent mail to: ' . implode(', ', $this->_recipients) . PHP_EOL);
     }
 }
