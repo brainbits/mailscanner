@@ -23,7 +23,7 @@
  * @package   MailScanner_Module
  * @author    Stephan Wentz <swentz@brainbits.net>
  * @copyright Copyright (c) 2010 brainbits GmbH (http://www.brainbits.net)
- * @see       MailScanner_Module_Interface
+ * @see       MailScanner_Module_Abstract
  */
 class MailScanner_Module_Analyze extends MailScanner_Module_Abstract
 {
