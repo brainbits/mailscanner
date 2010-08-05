@@ -1,0 +1,15 @@
+MailScanner
+
+* Originally by Stephan Wentz (https://github.com/brainits/mailscanner)
+
+Mail checking framework
+
+Table of Contents
+=============
+
+- Basic Syntax
+- Reports
+- Logs
+- Modules
+- Config file
+- TODOs
