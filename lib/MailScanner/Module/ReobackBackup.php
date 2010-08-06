@@ -50,26 +50,26 @@ class MailScanner_Module_ReobackBackup extends MailScanner_Module_Abstract
 
     protected function _doPrepare()
     {
-        $results = $this->_rawResult;
-        $this->_rawResult = array();
+        $readResults = $this->_readResults;
+        $this->_readResults = array();
 
-        foreach ($results as $row)
+        foreach ($readResults as $result)
         {
-            $host   = $row['match']['host'];
+            $host = $result['match']['host'];
 
-            if (empty($this->_rawResult[$host]))
+            if (empty($this->_readResults[$host]))
             {
-                $this->_rawResult[$host] = array(
+                $this->_readResults[$host] = array(
                     'occurances' => 0,
                     'sets'       => 0
                 );
             }
-            $this->_rawResult[$host]['occurances']++;
+            $this->_readResults[$host]['occurances']++;
 
-            $body = $row['content'];
+            $body = $result['content'];
             if(preg_match_all('/tgz\.\.\.done\./', $body, $match))
             {
-                $this->_rawResult[$host]['sets'] = count($match[0]);
+                $this->_readResults[$host]['sets'] = count($match[0]);
             }
         }
     }
@@ -84,55 +84,49 @@ class MailScanner_Module_ReobackBackup extends MailScanner_Module_Abstract
             $expectedNum    = $expectedRow['occurances'];
             $expectedSets   = $expectedRow['sets'];
 
-            if (empty($this->_rawResult[$expectedString]))
+            if (empty($this->_readResults[$expectedString]))
             {
-                $this->_ok = false;
-                $this->_result[] = $name." didn't run!";
-                $this->_errors[] = '(reo) '.$name." norun";
+                $this->_status = false;
+                $this->_reportLines[] = $name." didn't run!";
                 continue;
             }
 
-            $resultNum = $this->_rawResult[$expectedString]['occurances'];
+            $resultNum = $this->_readResults[$expectedString]['occurances'];
             if ($expectedNum != $resultNum)
             {
-                $this->_ok = false;
-                $this->_result[] = $name." was supposed to run ".$expectedNum."x, but ran ".$resultNum."x!";
+                $this->_status = false;
+                $this->_reportLines[] = $name." was supposed to run ".$expectedNum."x, but ran ".$resultNum."x!";
             }
-            $resultSets = $this->_rawResult[$expectedString]['sets'];
+            $resultSets = $this->_readResults[$expectedString]['sets'];
             if ($expectedSets != $resultSets)
             {
-                $this->_ok = false;
-                $this->_result[] = $name." was supposed to backup ".$expectedSets." sets, but did ".$resultSets." sets!";
+                $this->_status = false;
+                $this->_reportLines[] = $name." was supposed to backup ".$expectedSets." sets, but did ".$resultSets." sets!";
             }
 
-            if ($expectedNum != $resultNum || $expectedSets != $resultSets)
-            {
-                $this->_errors[] = '(reo) '.$name." error";
-            }
-
-            unset($this->_rawResult[$expectedString]);
+            unset($this->_readResults[$expectedString]);
         }
 
-        if (!empty($this->_rawResult))
+        if (!empty($this->_readResults))
         {
-            array_push($this->_result, 'Found candidates that are not configured:');
+            array_push($this->_reportLines, 'Found candidates that are not configured:');
             $this->_log->notice(PHP_EOL . 'Found candidates that are not configured:' . PHP_EOL);
-            foreach ($this->_rawResult as $name => $rawResult)
+            foreach ($this->_readResults as $name => $readResult)
             {
-                array_push($this->_result, $name . ': ran ' . $rawResult['occurances'] . 'x');
-                $this->_log->notice($name . ': ran ' . $rawResult['occurances'] . 'x' . PHP_EOL);
+                array_push($this->_reportLines, $name . ': ran ' . $readResult['occurances'] . 'x');
+                $this->_log->notice($name . ': ran ' . $readResult['occurances'] . 'x' . PHP_EOL);
             }
         }
 
-        if ($this->_ok)
+        if ($this->_status)
         {
             $this->_log->notice(PHP_EOL . 'Reoback Backup Results: All OK' . PHP_EOL);
-            array_unshift($this->_result, 'Reoback Backup Results: All OK');
+            array_unshift($this->_reportLines, 'Reoback Backup Results: All OK');
         }
         else
         {
             $this->_log->notice(PHP_EOL . 'Reoback Backup Results: Errors' . PHP_EOL);
-            array_unshift($this->_result, 'Reoback Backup Results: Errors');
+            array_unshift($this->_reportLines, 'Reoback Backup Results: Errors');
         }
     }
 }

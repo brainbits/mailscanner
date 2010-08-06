@@ -55,7 +55,7 @@ class MailScanner_Log_Console implements MailScanner_Log_Interface
     public function __construct($dotLimit = 70)
     {
         $this->_stdout = fopen('php://stdout', 'w');
-        $this->_stderr = fopen('php://stdout', 'w');
+        $this->_stderr = fopen('php://stderr', 'w');
 
         $this->_dotLimit = 79;
     }
@@ -132,7 +132,7 @@ class MailScanner_Log_Console implements MailScanner_Log_Interface
      */
     public function endDots()
     {
-        $this->log(PHP_EOL);
+        $this->info(PHP_EOL);
     }
 
     /**

@@ -43,6 +43,11 @@ class MailScanner_Module_Analyze extends MailScanner_Module_Abstract
     protected $_config = null;
 
     /**
+     * @var array
+     */
+    protected $_mappedResults = array();
+
+    /**
      * Constructor
      *
      * @param Zend_Mail_Storage_Imap    $mail
@@ -58,104 +63,165 @@ class MailScanner_Module_Analyze extends MailScanner_Module_Abstract
         $this->_log = $log;
     }
 
+    /**
+     * Init phase
+     */
     protected function _doInit()
     {
         $this->_init();
     }
 
+    /**
+     * Read phase
+     */
     protected function _doRead()
     {
         $this->_readMessages();
     }
 
+    /**
+     * Delete phase
+     */
     protected function _doDelete()
     {
         $this->_deleteMessages();
     }
 
+    /**
+     * Map phase
+     */
     protected function _doMap()
     {
-        $results = $this->_rawResult;
-        $this->_rawResult = array();
+        $readResults   = $this->_readResults;
+        $mappedResults = array();
 
-        $key = $this->_config->match->key;
-
-        foreach ($results as $row)
+        if (!isset($this->_config->map->key))
         {
-            $matchString = $row['match'][$key];
+            throw new Exception('No map key defined.');
+        }
 
-            if (empty($this->_rawResult[$matchString]))
+        $key = $this->_config->map->key;
+
+        foreach ($readResults as $row)
+        {
+            if (!isset($row['matches'][$key]))
             {
-                $this->_rawResult[$matchString] = array(
+                throw new Exception('Key "'.$key.'" not found in read result row.');
+            }
+
+            $matchString = $row['matches'][$key];
+
+            if (empty($mappedResults[$matchString]))
+            {
+                $mappedResults[$matchString] = array(
                     'occurances' => 0,
-                    'errors'     => 0
+                    'errors'     => 0,
+                    'count'      => array(),
                 );
             }
 
-            $this->_rawResult[$matchString]['occurances']++;
+            $mappedResults[$matchString]['occurances']++;
 
-            if ($row['status'] !== 'success')
+            if ($row['status'] !== self::STATUS_SUCCESS)
             {
-                $this->_rawResult[$matchString]['errors']++;
+                $mappedResults[$matchString]['errors']++;
+            }
+
+            foreach ($row['count'] as $countKey => $countValue)
+            {
+                $mappedResults[$matchString]['count'][$countKey][] = $countValue;
             }
         }
+
+        $this->_mappedResults = $mappedResults;
     }
 
+    /**
+     * Analyze phase
+     */
     protected function _doAnalyze()
     {
         $this->_log->info(PHP_EOL . 'Analyzing results...' . PHP_EOL);
 
-        foreach ($this->_options['check'] as $name => $expectedRow)
+        foreach ($this->_config->analyze as $name => $analyzeRow)
         {
-            $expectedString = $expectedRow['expected'];
-            $expectedNum = !empty($expectedRow['occurances']) ? $expectedRow['occurances'] : 1;
+            $expectedString = $analyzeRow->expected;
+            $expectedNum    = $analyzeRow->get('occurances', 1);
 
             // if there are no occurances for this check, it didn't run
-            if (empty($this->_rawResult[$expectedString]['occurances']))
+            if (empty($this->_mappedResults[$expectedString]['occurances']))
             {
-                $this->_ok = false;
-                $this->_result[] = $name." didn't run!";
+                $this->_status = false;
+                $this->_log->warn($name . ' didn\'t run!' . PHP_EOL);
+                $this->_reportLines[] = $name . ' didn\'t run!';
                 continue;
             }
 
             // check expected occurances
-            $resultNum = $this->_rawResult[$expectedString]['occurances'];
+            $resultNum = $this->_mappedResults[$expectedString]['occurances'];
             if ($expectedNum != $resultNum)
             {
-                $this->_ok = false;
-                $this->_result[] = $name." was supposed to occure ".$expectedNum."x, but occured ".$resultNum."x!";
+                $this->_status = false;
+                $this->_log->warn($name . ' was supposed to occure ' . $expectedNum . 'x, but occured ' . $resultNum . 'x!' . PHP_EOL);
+                $this->_reportLines[] = $name . ' was supposed to occure ' . $expectedNum . 'x, but occured ' . $resultNum . 'x!';
             }
 
             // check error condition
-            if (!empty($this->_rawResult[$expectedString]['errors']))
+            if (!empty($this->_mappedResults[$expectedString]['errors']))
             {
-                $this->_ok = false;
-                $this->_result[] = $name." had an error!";
+                $this->_status = false;
+                $this->_log->warn($name . ' had an error!' . PHP_EOL);
+                $this->_reportLines[] = $name . ' had an error!';
             }
 
-            unset($this->_rawResult[$expectedString]);
+            if (isset($analyzeRow->count))
+            {
+                foreach ($analyzeRow->count as $countKey => $countExpectedNum)
+                {
+                    if (empty($this->_mappedResults[$expectedString]['count'][$countKey]))
+                    {
+                        $this->_status = false;
+                        $this->_log->warn('Count key ' . $countKey.' was expected, but not found!' . PHP_EOL);
+                        $this->_reportLines[] = 'Count key ' . $countKey.' was expected, but not found!';
+                        continue;
+                    }
+
+                    foreach ($this->_mappedResults[$expectedString]['count'][$countKey] as $countNum)
+                    {
+                        if ($countExpectedNum != $countNum)
+                        {
+                            $this->_status = false;
+                            $this->_log->warn('Count key ' . $countKey.' was supposed to be found '.$countExpectedNum.'x, but was found '.$countNum.'x!' . PHP_EOL);
+                            $this->_reportLines[] = 'Count key ' . $countKey.' was supposed to be found '.$countExpectedNum.'x, but was found '.$countNum.'x!';
+                            continue;
+                        }
+                    }
+                }
+            }
+
+            unset($this->_mappedResults[$expectedString]);
         }
 
-        if (!empty($this->_rawResult))
+        if (!empty($this->_mappedResults))
         {
-            array_push($this->_result, 'Found candidates that are not configured:');
+            array_push($this->_reportLines, 'Found candidates that are not configured:');
             $this->_log->notice(PHP_EOL . 'Found candidates that are not configured:' . PHP_EOL);
-            foreach ($this->_rawResult as $name => $rawResult)
+            foreach ($this->_readResults as $name => $readResult)
             {
-                array_push($this->_result, $name . ': ran ' . $rawResult['occurances'] . 'x');
-                $this->_log->notice($name . ': ran ' . $rawResult['occurances'] . 'x' . PHP_EOL);
+                array_push($this->_reportLines, $name . ': ran ' . $readResult['occurances'] . 'x');
+                $this->_log->notice($name . ': ran ' . $readResult['occurances'] . 'x' . PHP_EOL);
             }
         }
 
-        if ($this->_ok)
+        if ($this->_status)
         {
             $this->_log->notice(PHP_EOL . $this->_options['title'] .' results: All OK' . PHP_EOL);
-            array_unshift($this->_result, $this->_options['title'] .' results: All OK');
+            array_unshift($this->_reportLines, $this->_options['title'] .' results: All OK');
         }
         else
         {
             $this->_log->notice(PHP_EOL . $this->_options['title'] .' results: Errors' . PHP_EOL);
-            array_unshift($this->_result, $this->_options['title'] .' results: Errors');
+            array_unshift($this->_reportLines, $this->_options['title'] .' results: Errors');
         }
     }
 }

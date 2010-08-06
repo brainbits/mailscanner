@@ -65,8 +65,10 @@ class MailScanner_Check
 
     /**
      * Run checks
+     *
+     * @param boolean $simulate
      */
-    public function run()
+    public function run($simulate = false)
     {
         $this->_log->info('Testing started: '.date('Y-m-d H:i:s') . PHP_EOL);
         $body = 'Testing started: '.date('Y-m-d H:i:s')."\n\n";
@@ -77,12 +79,16 @@ class MailScanner_Check
         {
             /* @var $module MaiLScanner_Module_Interface */
 
-            $result = $module->check();
+            $module->setSimulate($simulate);
 
-            foreach ($result as $row)
+            $status = $module->check();
+            $reportLines = $module->getReportLines();
+
+            foreach ($reportLines as $line)
             {
-                $body .= $row . "\n";
+                $body .= $line . "\n";
             }
+
             $body .= "\n";
         }
 

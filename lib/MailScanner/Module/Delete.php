@@ -58,16 +58,25 @@ class MailScanner_Module_Delete extends MailScanner_Module_Abstract
         $this->_log = $log;
     }
 
+    /**
+     * Init phase
+     */
     protected function _doInit()
     {
         $this->_init();
     }
 
+    /**
+     * Read phase
+     */
     protected function _doRead()
     {
         $this->_readMessages();
     }
 
+    /**
+     * Delete phase
+     */
     protected function _doDelete()
     {
         $this->_deleteMessages($this->_deleteMsgs);

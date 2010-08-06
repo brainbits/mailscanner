@@ -27,17 +27,28 @@
 interface MailScanner_Module_Interface
 {
     /**
+     * Set simulate flag
+     *
+     * @param boolean $simulate
+     */
+    public function setSimulate($simulate = true);
+
+    /**
      * Run check
+     *
+     * @return boolean
      */
     public function check();
 
     /**
+     * Return status
+     *
      * @return boolean
      */
-    public function isOk();
+    public function getStatus();
 
     /**
      * @return array
      */
-    public function getResult();
+    public function getReportLines();
 }
