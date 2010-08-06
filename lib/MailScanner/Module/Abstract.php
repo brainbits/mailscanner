@@ -87,6 +87,13 @@ abstract class MailScanner_Module_Abstract implements MailScanner_Module_Interfa
     protected $_deleteMsgs = array();
 
     /**
+     * Mark seen items buffer
+     *
+     * @var array
+     */
+    protected $_markSeenMsgs = array();
+
+    /**
      * Set simulate flag
      *
      * @param boolean $simulate
@@ -455,16 +462,7 @@ abstract class MailScanner_Module_Abstract implements MailScanner_Module_Interfa
                 continue;
             }
 
-            if (!$this->_simulate && $this->_options['action_mark_seen'])
-            {
-                // mark seen
-                $flags = $msg->getFlags();
-                if (!in_array(Zend_Mail_Storage::FLAG_SEEN, $flags))
-                {
-                    $flags[Zend_Mail_Storage::FLAG_SEEN] = Zend_Mail_Storage::FLAG_SEEN;
-                    $this->_mail->setFlags($msgID, $flags);
-                }
-            }
+            array_unshift($this->_markSeenMsgs, $msgID);
 
             // skip messages that are older than startDate
             if (!$this->_options['action_examine'] || $date < $startDate)
@@ -504,7 +502,8 @@ abstract class MailScanner_Module_Abstract implements MailScanner_Module_Interfa
         $this->_log->endDots();
 
         $this->_log->info(PHP_EOL);
-        $this->_log->info(count($this->_deleteMsgs) . ' mail(s) marked for deletion' . PHP_EOL);
+        $this->_log->info(count($this->_deleteMsgs) . ' mail(s) in delete list' . PHP_EOL);
+        $this->_log->info(count($this->_markSeenMsgs) . ' mail(s) in mark seen list' . PHP_EOL);
         if ($this->_options['action_examine'])
         {
             $this->_log->info(count($this->_readResults) . ' candidate mail(s)' . PHP_EOL);
@@ -537,6 +536,42 @@ abstract class MailScanner_Module_Abstract implements MailScanner_Module_Interfa
                 if (!$this->_simulate)
                 {
                     $this->_mail->removeMessage($msgId);
+                }
+            }
+
+            $this->_log->endDots();
+            $this->_log->info(PHP_EOL);
+        }
+    }
+    /**
+     * Mark messages seen
+     */
+    protected function _markMessagesSeen()
+    {
+        if (!$this->_options['action_mark_seen'])
+        {
+            return;
+        }
+
+        if (sizeof($this->_markSeenMsgs))
+        {
+            $this->_log->notice(PHP_EOL . 'Marking ' . count($this->_markSeenMsgs) . ' mails seen:' . PHP_EOL);
+            $this->_log->startDots();
+
+            foreach ($this->_markSeenMsgs as $msgId)
+            {
+                $this->_log->dot(self::DOT_HIT);
+                if (!$this->_simulate)
+                {
+                    $msg = $this->_mail->getMail($msgId);
+
+                    // mark seen
+                    $flags = $msg->getFlags();
+                    if (!in_array(Zend_Mail_Storage::FLAG_SEEN, $flags))
+                    {
+                        $flags[Zend_Mail_Storage::FLAG_SEEN] = Zend_Mail_Storage::FLAG_SEEN;
+                        $this->_mail->setFlags($msgId, $flags);
+                    }
                 }
             }
 

@@ -16,8 +16,8 @@
  */
 
 /**
- * Delete module class
- * Basic module that deletes mails
+ * Mark seen module class
+ * Basic module that marks all mails seen
  *
  * @category  MailScanner
  * @package   MailScanner_Module
@@ -25,7 +25,7 @@
  * @copyright Copyright (c) 2010 brainbits GmbH (http://www.brainbits.net)
  * @see       MailScanner_Module_Abstract
  */
-class MailScanner_Module_Delete extends MailScanner_Module_Abstract
+class MailScanner_Module_MarkSeen extends MailScanner_Module_Abstract
 {
     /**
      * @var Zend_Mail_Storage_Imap
@@ -77,8 +77,8 @@ class MailScanner_Module_Delete extends MailScanner_Module_Abstract
     /**
      * Delete phase
      */
-    protected function _doDelete()
+    protected function _doMarkSeen()
     {
-        $this->_deleteMessages();
+        $this->_markMessagesSeen();
     }
 }
