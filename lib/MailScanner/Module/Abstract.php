@@ -152,7 +152,7 @@ abstract class MailScanner_Module_Abstract implements MailScanner_Module_Interfa
     {
         if (!isset($config->folder))
         {
-            throw new Exception('folder config not set');
+            throw new MailScanner_Exception('folder config not set');
         }
 
         $this->_options['folder'] = $config->folder;
@@ -178,7 +178,7 @@ abstract class MailScanner_Module_Abstract implements MailScanner_Module_Interfa
             $examineTreshold = (string)$config->tresholds->examine;
             if (!preg_match('/^([0-9]+)([smhd]{0,1})$/', $examineTreshold, $match))
             {
-                throw new Exception('Treshold config invalid.');
+                throw new MailScanner_Exception('Treshold config invalid.');
             }
             if (!empty($match[2]))
             {
@@ -205,7 +205,7 @@ abstract class MailScanner_Module_Abstract implements MailScanner_Module_Interfa
             $keepTreshold = (string)$config->tresholds->keep;
             if (!preg_match('/^([0-9]+)([smhd]{0,1})$/', $keepTreshold, $match))
             {
-                throw new Exception('Treshold config invalid.');
+                throw new MailScanner_Exception('Treshold config invalid.');
             }
             if (!empty($match[2]))
             {
@@ -230,11 +230,11 @@ abstract class MailScanner_Module_Abstract implements MailScanner_Module_Interfa
 
         if ($this->_options['treshold_examine'] < 1)
         {
-            //throw new Exception('Treshold for consider days can\'t be smaller then 1');
+            //throw new MailScanner_Exception('Treshold for consider days can\'t be smaller then 1');
         }
         if ($this->_options['treshold_keep'] < 1)
         {
-            //throw new Exception('Treshold for keep days can\'t be smaller then 1');
+            //throw new MailScanner_Exception('Treshold for keep days can\'t be smaller then 1');
         }
     }
 
@@ -443,7 +443,7 @@ abstract class MailScanner_Module_Abstract implements MailScanner_Module_Interfa
 
                 if (!$hasPatterns)
                 {
-                    throw new Exception('No patterns found.');
+                    throw new MailScanner_Exception('No patterns found.');
                 }
             }
 

@@ -97,7 +97,7 @@ class MailScanner_Module_Analyze extends MailScanner_Module_Abstract
 
         if (!isset($this->_config->map->key))
         {
-            throw new Exception('No map key defined.');
+            throw new MailScanner_Exception('No map key defined.');
         }
 
         $key = $this->_config->map->key;
@@ -106,7 +106,7 @@ class MailScanner_Module_Analyze extends MailScanner_Module_Abstract
         {
             if (!isset($row['matches'][$key]))
             {
-                throw new Exception('Key "'.$key.'" not found in read result row.');
+                throw new MailScanner_Exception('Key "'.$key.'" not found in read result row.');
             }
 
             $matchString = $row['matches'][$key];

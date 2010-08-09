@@ -82,14 +82,9 @@ class MailScanner_Check
             $module->setSimulate($simulate);
 
             $status = $module->check();
+
             $reportLines = $module->getReportLines();
-
-            foreach ($reportLines as $line)
-            {
-                $body .= $line . "\n";
-            }
-
-            $body .= "\n";
+            $body .= implode("\n", $reportLines) . "\n";
         }
 
         $this->_report->report($body);

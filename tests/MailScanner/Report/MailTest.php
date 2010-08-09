@@ -1,10 +1,7 @@
 <?php
 
-require_once '../../../lib/MailScanner/Report/Interface.php';
-require_once '../../../lib/MailScanner/Report/Mail.php';
-require_once 'PHPUnit/Framework/TestCase.php';
-
 // stupid, but needed since we don't bundle ZF
+class Zend_Mail_Transport_Abstract {}
 class Zend_Mail
 {
     public function __call($key, $params) {}
@@ -236,7 +233,7 @@ class MailScanner_Report_MailTest extends PHPUnit_Framework_TestCase
     /**
      * Tests MailScanner_Report_Console->report()
      *
-     * @expectedException Exception
+     * @expectedException MailScanner_Exception
      */
     public function testReportWithoutRecipients ()
     {

@@ -137,7 +137,7 @@ class MailScanner_Report_Mail implements MailScanner_Report_Interface
     {
         if (!count($this->_recipients))
         {
-            throw new Exception('No recipients set.');
+            throw new MailScanner_Exception('No recipients set.');
         }
 
         $mail = new Zend_Mail();

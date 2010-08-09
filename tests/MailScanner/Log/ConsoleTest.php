@@ -1,9 +1,5 @@
 <?php
 
-require_once '../../../lib/MailScanner/Log/Interface.php';
-require_once '../../../lib/MailScanner/Log/Console.php';
-require_once 'PHPUnit/Framework/TestCase.php';
-
 /**
  * MailScanner_Log_Console test case.
  */
@@ -41,8 +37,8 @@ class MailScanner_Log_ConsoleTest extends PHPUnit_Framework_TestCase
     {
         ob_start();
 
-        $this->_log->log('test');
-        $this->_log = null;
+        $this->_log->info('test');
+        $this->_log->close();
 
         $output = ob_get_clean();
 
@@ -56,10 +52,10 @@ class MailScanner_Log_ConsoleTest extends PHPUnit_Framework_TestCase
     {
         ob_start();
 
-        $this->_log->log('test1');
-        $this->_log->log('test2');
-        $this->_log->log('test3');
-        $this->_log = null;
+        $this->_log->debug('test1');
+        $this->_log->info('test2');
+        $this->_log->notice('test3');
+        $this->_log->close();
 
         $output = ob_get_clean();
 
@@ -73,10 +69,10 @@ class MailScanner_Log_ConsoleTest extends PHPUnit_Framework_TestCase
     {
         ob_start();
 
-        $this->_log->log('test1' . PHP_EOL);
-        $this->_log->log('test2' . PHP_EOL);
-        $this->_log->log('test3' . PHP_EOL);
-        $this->_log = null;
+        $this->_log->debug('test1' . PHP_EOL);
+        $this->_log->info('test2' . PHP_EOL);
+        $this->_log->info('test3' . PHP_EOL);
+        $this->_log->close();
 
         $output = ob_get_clean();
 

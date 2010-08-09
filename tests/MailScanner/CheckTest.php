@@ -1,13 +1,5 @@
 <?php
 
-require_once '../../lib/MailScanner/Check.php';
-require_once '../../lib/MailScanner/Report/Interface.php';
-require_once '../../lib/MailScanner/Log/Interface.php';
-require_once '../../lib/MailScanner/Module/Interface.php';
-require_once 'PHPUnit/Framework/TestCase.php';
-
-date_default_timezone_set('Europe/Berlin');
-
 /**
  * MailScanner_Check test case.
  */
@@ -71,24 +63,40 @@ class MailScanner_CheckTest extends PHPUnit_Framework_TestCase
         $module1Mock = $this->getMock('MailScanner_Module_Interface');
         $module2Mock = $this->getMock('MailScanner_Module_Interface');
 
-        $this->_check->addModule($module1Mock);
-        $this->_check->addModule($module2Mock);
-
-        $this->_logMock->expects($this->exactly(2))
-                       ->method('log')
+        $this->_logMock->expects($this->exactly(1))
+                       ->method('info')
                        ->with($this->isType('string'));
+
+        $module1Mock->expects($this->at(0))
+                    ->method('setSimulate')
+                    ->with($this->isType('boolean'));
+
+        $module1Mock->expects($this->at(1))
+                    ->method('check')
+                    ->will($this->returnValue(true));
+
+        $module1Mock->expects($this->at(2))
+                    ->method('getReportLines')
+                    ->will($this->returnValue(array("report1")));
+
+        $module1Mock->expects($this->at(0))
+                    ->method('setSimulate')
+                    ->with($this->isType('boolean'));
+
+        $module2Mock->expects($this->at(1))
+                    ->method('check')
+                    ->will($this->returnValue(true));
+
+        $module2Mock->expects($this->at(2))
+                    ->method('getReportLines')
+                    ->will($this->returnValue(array("report2")));
 
         $this->_reportMock->expects($this->once())
                           ->method('report')
                           ->with($this->isType('string'));
 
-        $module1Mock->expects($this->once())
-                    ->method('check')
-                    ->will($this->returnValue(array('mock1')));
-
-        $module2Mock->expects($this->once())
-                    ->method('check')
-                    ->will($this->returnValue(array('mock2')));
+        $this->_check->addModule($module1Mock);
+        $this->_check->addModule($module2Mock);
 
         $this->_check->run();
     }

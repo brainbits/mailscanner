@@ -48,6 +48,8 @@ interface MailScanner_Module_Interface
     public function getStatus();
 
     /**
+     * Return report lines
+     *
      * @return array
      */
     public function getReportLines();

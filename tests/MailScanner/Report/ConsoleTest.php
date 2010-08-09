@@ -1,9 +1,5 @@
 <?php
 
-require_once '../../../lib/MailScanner/Report/Interface.php';
-require_once '../../../lib/MailScanner/Report/Console.php';
-require_once 'PHPUnit/Framework/TestCase.php';
-
 /**
  * MailScanner_Report_Console test case.
  */
@@ -43,9 +39,10 @@ class MailScanner_Report_ConsoleTest extends PHPUnit_Framework_TestCase
 
         $this->_report->report('testreport');
 
-        $output = ob_get_flush();
+        $output = ob_get_clean();
 
-        $this->assertEquals('Generated output:' . PHP_EOL . 'testreport' . PHP_EOL, $output);
+        $expected = 'Generated output:' . PHP_EOL . 'testreport' . PHP_EOL;
+        $this->assertEquals($expected, $output);
     }
 }
 

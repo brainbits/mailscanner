@@ -32,12 +32,12 @@ class MailScanner_Log_Console implements MailScanner_Log_Interface
     /**
      * @var resource
      */
-    protected $_stdout;
+    protected $_stdout = null;
 
     /**
      * @var resource
      */
-    protected $_stderr;
+    protected $_stderr = null;
 
     /**
      * @var integer
@@ -54,10 +54,9 @@ class MailScanner_Log_Console implements MailScanner_Log_Interface
      */
     public function __construct($dotLimit = 70)
     {
-        $this->_stdout = fopen('php://stdout', 'w');
-        $this->_stderr = fopen('php://stderr', 'w');
-
         $this->_dotLimit = 79;
+
+        $this->open();
     }
 
     /**
@@ -65,8 +64,41 @@ class MailScanner_Log_Console implements MailScanner_Log_Interface
      */
     public function __destruct()
     {
-        fclose ($this->_stdout);
-        fclose ($this->_stderr);
+        $this->close();
+    }
+
+    /**
+     * Open streams
+     */
+    public function open()
+    {
+        if ($this->_stdout === null)
+        {
+            $this->_stdout = fopen('php://output', 'w');
+        }
+
+        if ($this->_stderr === null)
+        {
+            $this->_stderr = fopen('php://output', 'w');
+        }
+    }
+
+    /**
+     * Close streams
+     */
+    public function close()
+    {
+        if ($this->_stdout !== null)
+        {
+            fclose ($this->_stdout);
+            $this->_stdout = null;
+        }
+
+        if ($this->_stderr === null)
+        {
+            fclose ($this->_stderr);
+            $this->_stderr = null;
+        }
     }
 
     /**

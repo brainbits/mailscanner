@@ -35,7 +35,7 @@ class MailScanner_Report_Console implements MailScanner_Report_Interface
      */
     public function report($body)
     {
-        echo PHP_EOL . 'Generated output:' . PHP_EOL;
+        echo 'Generated output:' . PHP_EOL;
         echo $body . PHP_EOL;
     }
 }
